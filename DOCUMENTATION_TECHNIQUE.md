@@ -736,7 +736,7 @@ docker cp clinic-appointments:/app/microservice-appointments/appointments.db ./a
 
 ```bash
 # 1. Cloner le dépôt
-git clone https://github.com/VOTRE-USERNAME/clinic-microservices.git
+git clone https://github.com/emna008/clinic-microservices.git
 cd clinic-microservices
 
 # 2. Démarrer tous les services

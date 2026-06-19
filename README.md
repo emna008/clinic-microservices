@@ -40,7 +40,7 @@ La communication **asynchrone** entre services est assurée par **Apache Kafka**
 ### Lancer tout le projet
 
 ```bash
-git clone https://github.com/VOTRE-USERNAME/clinic-microservices.git
+git clone https://github.com/emna008/clinic-microservices.git
 cd clinic-microservices
 docker-compose up --build
 ```
