@@ -1,0 +1,24 @@
+syntax = "proto3";
+package medicalrecord;
+
+service MedicalRecordService {
+  rpc CreateRecord (CreateRecordRequest) returns (RecordResponse);
+  rpc GetRecord (GetRecordRequest) returns (RecordResponse);
+  rpc GetRecordsByPatient (GetByPatientRequest) returns (ListRecordsResponse);
+  rpc AddPrescription (AddPrescriptionRequest) returns (RecordResponse);
+  rpc UpdateDiagnosis (UpdateDiagnosisRequest) returns (RecordResponse);
+}
+message CreateRecordRequest {
+  string patientId = 1; string appointmentId = 2; string doctorName = 3;
+  string diagnosis = 4; string notes = 5; repeated string prescriptions = 6;
+}
+message GetRecordRequest { string id = 1; }
+message GetByPatientRequest { string patientId = 1; }
+message AddPrescriptionRequest { string recordId = 1; string prescription = 2; }
+message UpdateDiagnosisRequest { string recordId = 1; string diagnosis = 2; }
+message RecordResponse {
+  string id = 1; string patientId = 2; string appointmentId = 3;
+  string doctorName = 4; string diagnosis = 5; string notes = 6;
+  repeated string prescriptions = 7; string createdAt = 8; string updatedAt = 9;
+}
+message ListRecordsResponse { repeated RecordResponse records = 1; }

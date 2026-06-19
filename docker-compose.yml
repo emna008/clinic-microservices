@@ -1,0 +1,95 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: clinic-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: clinic-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  microservice-patients:
+    build:
+      context: .
+      dockerfile: microservice-patients/Dockerfile
+    container_name: clinic-patients
+    ports:
+      - "50051:50051"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER: kafka:29092
+      PORT: 50051
+    restart: unless-stopped
+
+  microservice-appointments:
+    build:
+      context: .
+      dockerfile: microservice-appointments/Dockerfile
+    container_name: clinic-appointments
+    ports:
+      - "50052:50052"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER: kafka:29092
+      PORT: 50052
+    restart: unless-stopped
+
+  microservice-medical-records:
+    build:
+      context: .
+      dockerfile: microservice-medical-records/Dockerfile
+    container_name: clinic-medical-records
+    ports:
+      - "50053:50053"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER: kafka:29092
+      PORT: 50053
+    restart: unless-stopped
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    container_name: clinic-api-gateway
+    ports:
+      - "3000:3000"
+    depends_on:
+      - microservice-patients
+      - microservice-appointments
+      - microservice-medical-records
+    environment:
+      PORT: 3000
+      PATIENTS_GRPC_HOST: microservice-patients:50051
+      APPOINTMENTS_GRPC_HOST: microservice-appointments:50052
+      MEDICAL_RECORDS_GRPC_HOST: microservice-medical-records:50053
+    restart: unless-stopped
